@@ -1,14 +1,18 @@
 {
   "name": "crimson-render",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "worker": "bun run src/worker/index.ts",
+    "flush:once": "bun run src/worker/runOnce.ts"
   },
   "dependencies": {
+    "cron": "^4.4.0",
     "hono": "^4.11.1",
     "ioredis": "^5.8.2",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/cron": "^2.4.3"
   }
 }

@@ -9,6 +9,8 @@ TAR_FILE="${IMAGE_NAME}.tar"
 REMOTE_DIR="/home/$REMOTE_USER/docker_images"
 CONTAINER_PORT=3003
 HOST_PORT=3003
+WORKER_NAME="${IMAGE_NAME}-worker"
+WORKER_FLUSH_INTERVAL_MS=60000
 
 # 构建 Docker 镜像
 echo "✅ 开始构建 Docker 镜像..."
@@ -43,8 +45,10 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} << EOF
     # 停止并删除旧容器（如果存在）
     docker stop ${IMAGE_NAME} || true
     docker rm ${IMAGE_NAME} || true
+    docker stop ${WORKER_NAME} || true
+    docker rm ${WORKER_NAME} || true
 
-    # 运行新容器
+    # 运行 web 容器
     docker run -d \
       --name ${IMAGE_NAME} \
       --restart always \
@@ -53,16 +57,27 @@ ssh ${REMOTE_USER}@${REMOTE_HOST} << EOF
       --env-file ${IMAGE_NAME}.env \
       ${IMAGE_NAME}:${IMAGE_TAG}
 
+    # 运行 worker 容器（定期落库：viewCount / dailyStat / share_view）
+    docker run -d \
+      --name ${WORKER_NAME} \
+      --restart always \
+      --network host \
+      -e FLUSH_INTERVAL_MS=${WORKER_FLUSH_INTERVAL_MS} \
+      --env-file ${IMAGE_NAME}.env \
+      ${IMAGE_NAME}:${IMAGE_TAG} \
+      bun run worker
+
     # 清理服务器上的 tar 文件
     rm ${TAR_FILE}
 
     # 显示容器状态
     echo "📊 容器状态："
-    docker ps | grep ${IMAGE_NAME}
+    docker ps | grep -E "${IMAGE_NAME}|${WORKER_NAME}" || true
 
     # 显示容器日志（最后10行）
     echo "📝 容器日志（最后10行）："
     docker logs --tail 10 ${IMAGE_NAME}
+    docker logs --tail 10 ${WORKER_NAME}
 EOF
 
 # 清理本地文件
@@ -71,4 +86,3 @@ rm ${TAR_FILE}
 
 echo "✨ 部署完成！"
 echo "🌐 访问地址: http://${REMOTE_HOST}:${HOST_PORT}"
-
