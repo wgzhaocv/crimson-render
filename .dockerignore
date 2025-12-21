@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+dist
+build
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Misc
+README.md
+*.md
+
